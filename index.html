@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff Survey Comparison Dashboard</title>
+<style>
+:root {
+  --bg:#f7f8fa;
+  --card:#ffffff;
+  --ink:#1f2937;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --elkins:#293241;
+  --liaos:#64748b;
+  --pos:#17683a;
+  --neg:#9b1c1c;
+  --warn:#7c5c00;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.45;
+}
+.container {
+  max-width:1180px;
+  margin:0 auto;
+  padding:32px 22px 56px;
+}
+.header {
+  background:linear-gradient(135deg,#111827,#374151);
+  color:white;
+  padding:34px 30px;
+  border-radius:20px;
+  margin-bottom:22px;
+  box-shadow:0 8px 24px rgba(17,24,39,.18);
+}
+.header h1 {
+  margin:0 0 8px;
+  font-size:32px;
+  letter-spacing:-.02em;
+}
+.header p {
+  margin:0;
+  color:#d1d5db;
+  font-size:15px;
+}
+.cards {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:18px;
+}
+.card, .panel, .insight, .comment-col {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 2px 12px rgba(15,23,42,.04);
+}
+.card {
+  padding:18px 18px 16px;
+}
+.label {
+  color:var(--muted);
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.big {
+  font-size:34px;
+  font-weight:700;
+  margin-top:6px;
+  letter-spacing:-.03em;
+}
+.vs { font-size:16px; color:var(--muted); font-weight:400; }
+.sub {
+  color:var(--muted);
+  font-size:13px;
+  margin-top:3px;
+}
+.panel {
+  padding:20px;
+  margin-top:18px;
+}
+.panel h2 {
+  margin:0 0 12px;
+  font-size:20px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+th {
+  text-align:left;
+  color:#4b5563;
+  border-bottom:1px solid var(--line);
+  padding:10px 8px;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+td {
+  border-bottom:1px solid var(--line);
+  padding:11px 8px;
+  vertical-align:middle;
+}
+tr:last-child td { border-bottom:none; }
+.crit { font-weight:600; width:26%; }
+.num {
+  display:inline-block;
+  min-width:38px;
+  font-weight:700;
+}
+.bar-track {
+  display:inline-block;
+  width:62%;
+  height:8px;
+  background:#eef0f3;
+  border-radius:999px;
+  margin-left:10px;
+  vertical-align:middle;
+  overflow:hidden;
+}
+.bar {
+  height:100%;
+  border-radius:999px;
+  background:#9ca3af;
+}
+.bar.elkins { background:var(--elkins); }
+.bar.liaos { background:var(--liaos); }
+.pos { color:var(--pos); font-weight:700; }
+.neg { color:var(--neg); font-weight:700; }
+.tie { color:var(--muted); font-weight:700; }
+.muted { color:var(--muted); }
+.legend {
+  display:flex;
+  gap:18px;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:13px;
+}
+.swatch {
+  display:inline-block;
+  width:12px;
+  height:12px;
+  border-radius:3px;
+  margin-right:6px;
+  vertical-align:-1px;
+}
+.swatch.elkins { background:var(--elkins); }
+.swatch.liaos { background:var(--liaos); }
+.insight-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-top:18px;
+}
+.insight {
+  padding:18px;
+}
+.insight h3, .comment-col h3 {
+  margin:0 0 8px;
+  font-size:16px;
+}
+.insight p {
+  margin:0;
+  color:#374151;
+  font-size:14px;
+}
+.comment-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:18px;
+}
+.comment-col {
+  padding:18px 20px;
+}
+ol {
+  margin:0;
+  padding-left:20px;
+}
+li {
+  margin-bottom:16px;
+}
+li:last-child { margin-bottom:0; }
+li span {
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:3px;
+}
+li p {
+  margin:0;
+  font-size:14px;
+}
+.note {
+  color:var(--muted);
+  font-size:13px;
+  margin-top:10px;
+}
+@media(max-width:900px) {
+  .cards, .insight-grid, .comment-grid { grid-template-columns:1fr; }
+  .bar-track { width:48%; }
+  .header h1 { font-size:26px; }
+}
+@media print {
+  body { background:white; }
+  .container { max-width:none; padding:18px; }
+  .header { box-shadow:none; }
+  .card,.panel,.insight,.comment-col { box-shadow:none; break-inside:avoid; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Staff Survey Comparison Dashboard</h1>
+    <p>Candidate staff survey comparison: Elkins vs Liaos. Generated from Qualtrics exports dated June 29, 2026.</p>
+  </div>
+
+  
+<div class="cards">
+  <div class="card">
+    <div class="label">Elkins surveys</div>
+    <div class="big">11</div>
+    <div class="sub">completed responses</div>
+  </div>
+  <div class="card">
+    <div class="label">Liaos surveys</div>
+    <div class="big">10</div>
+    <div class="sub">completed responses</div>
+  </div>
+  <div class="card">
+    <div class="label">Overall mean</div>
+    <div class="big">3.41 <span class="vs">vs</span> 3.33</div>
+    <div class="sub">Elkins vs Liaos, 1–5 scale</div>
+  </div>
+  <div class="card">
+    <div class="label">Difference</div>
+    <div class="big pos">+0.08</div>
+    <div class="sub">Elkins minus Liaos</div>
+  </div>
+</div>
+
+
+  
+<div class="insight-grid">
+  <div class="insight">
+    <h3>Mean score comparison</h3>
+    <p>Elkins was slightly higher overall: <strong>3.41</strong> vs <strong>3.33</strong> on the 1–5 scale.</p>
+  </div>
+  <div class="insight">
+    <h3>Criterion-level pattern</h3>
+    <p>Elkins led in <strong>5</strong> of 8 criteria; Liaos led in <strong>3</strong> of 8 criteria.</p>
+  </div>
+  <div class="insight">
+    <h3>Largest Elkins advantages</h3>
+    <p>Overall Professionalism (+0.34); Problem Solving (+0.25); Adaptability (+0.17).</p>
+  </div>
+  <div class="insight">
+    <h3>Largest Liaos advantages</h3>
+    <p>Departmental Integration (-0.11); Communication Skills (-0.03); Institutional Value (-0.02).</p>
+  </div>
+</div>
+
+
+  <div class="panel">
+    <h2>Criterion-Level Mean Ratings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Criterion</th>
+          <th>Elkins Mean</th>
+          <th>Liaos Mean</th>
+          <th>Difference</th>
+          <th>Higher</th>
+        </tr>
+      </thead>
+      <tbody>
+    <tr>
+      <td class="crit">Role Understanding</td>
+      <td><span class="num">3.64</span><div class="bar-track"><div class="bar elkins" style="width:72.7%"></div></div></td>
+      <td><span class="num">3.60</span><div class="bar-track"><div class="bar liaos" style="width:72.0%"></div></div></td>
+      <td class="pos">+0.04</td>
+      <td>Elkins</td>
+    </tr>
+    
+    <tr>
+      <td class="crit">Communication Skills</td>
+      <td><span class="num">3.27</span><div class="bar-track"><div class="bar elkins" style="width:65.5%"></div></div></td>
+      <td><span class="num">3.30</span><div class="bar-track"><div class="bar liaos" style="width:66.0%"></div></div></td>
+      <td class="neg">-0.03</td>
+      <td>Liaos</td>
+    </tr>
+    
+    <tr>
+      <td class="crit">Collaborative Approach</td>
+      <td><span class="num">3.64</span><div class="bar-track"><div class="bar elkins" style="width:72.7%"></div></div></td>
+      <td><span class="num">3.60</span><div class="bar-track"><div class="bar liaos" style="width:72.0%"></div></div></td>
+      <td class="pos">+0.04</td>
+      <td>Elkins</td>
+    </tr>
+    
+    <tr>
+      <td class="crit">Adaptability</td>
+      <td><span class="num">3.27</span><div class="bar-track"><div class="bar elkins" style="width:65.5%"></div></div></td>
+      <td><span class="num">3.10</span><div class="bar-track"><div class="bar liaos" style="width:62.0%"></div></div></td>
+      <td class="pos">+0.17</td>
+      <td>Elkins</td>
+    </tr>
+    
+    <tr>
+      <td class="crit">Problem Solving</td>
+      <td><span class="num">3.55</span><div class="bar-track"><div class="bar elkins" style="width:70.9%"></div></div></td>
+      <td><span class="num">3.30</span><div class="bar-track"><div class="bar liaos" style="width:66.0%"></div></div></td>
+      <td class="pos">+0.25</td>
+      <td>Elkins</td>
+    </tr>
+    
+    <tr>
+      <td class="crit">Institutional Value</td>
+      <td><span class="num">3.18</span><div class="bar-track"><div class="bar elkins" style="width:63.6%"></div></div></td>
+      <td><span class="num">3.20</span><div class="bar-track"><div class="bar liaos" style="width:64.0%"></div></div></td>
+      <td class="neg">-0.02</td>
+      <td>Liaos</td>
+    </tr>
+    
+    <tr>
+      <td class="crit">Departmental Integration</td>
+      <td><span class="num">3.09</span><div class="bar-track"><div class="bar elkins" style="width:61.8%"></div></div></td>
+      <td><span class="num">3.20</span><div class="bar-track"><div class="bar liaos" style="width:64.0%"></div></div></td>
+      <td class="neg">-0.11</td>
+      <td>Liaos</td>
+    </tr>
+    
+    <tr>
+      <td class="crit">Overall Professionalism</td>
+      <td><span class="num">3.64</span><div class="bar-track"><div class="bar elkins" style="width:72.7%"></div></div></td>
+      <td><span class="num">3.30</span><div class="bar-track"><div class="bar liaos" style="width:66.0%"></div></div></td>
+      <td class="pos">+0.34</td>
+      <td>Elkins</td>
+    </tr>
+    </tbody>
+    </table>
+    <div class="legend"><span><i class="swatch elkins"></i>Elkins</span><span><i class="swatch liaos"></i>Liaos</span></div>
+    <div class="note">Difference is calculated as Elkins minus Liaos. Rating scale: 1 = lowest, 5 = highest.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Recommendation Distribution</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Recommendation</th>
+          <th>Elkins</th>
+          <th>Liaos</th>
+          <th>Count Difference</th>
+        </tr>
+      </thead>
+      <tbody>
+    <tr>
+      <td>Highly Recommend</td>
+      <td>3 <span class="muted">(27%)</span><div class="bar-track"><div class="bar elkins" style="width:27.3%"></div></div></td>
+      <td>3 <span class="muted">(30%)</span><div class="bar-track"><div class="bar liaos" style="width:30.0%"></div></div></td>
+      <td class="tie">+0</td>
+    </tr>
+    
+    <tr>
+      <td>Recommend</td>
+      <td>4 <span class="muted">(36%)</span><div class="bar-track"><div class="bar elkins" style="width:36.4%"></div></div></td>
+      <td>2 <span class="muted">(20%)</span><div class="bar-track"><div class="bar liaos" style="width:20.0%"></div></div></td>
+      <td class="pos">+2</td>
+    </tr>
+    
+    <tr>
+      <td>Recommend with Reservations</td>
+      <td>0 <span class="muted">(0%)</span><div class="bar-track"><div class="bar elkins" style="width:0.0%"></div></div></td>
+      <td>3 <span class="muted">(30%)</span><div class="bar-track"><div class="bar liaos" style="width:30.0%"></div></div></td>
+      <td class="neg">-3</td>
+    </tr>
+    
+    <tr>
+      <td>Not Recommended</td>
+      <td>4 <span class="muted">(36%)</span><div class="bar-track"><div class="bar elkins" style="width:36.4%"></div></div></td>
+      <td>2 <span class="muted">(20%)</span><div class="bar-track"><div class="bar liaos" style="width:20.0%"></div></div></td>
+      <td class="pos">+2</td>
+    </tr>
+    </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>All Rating Responses by Score</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Score</th>
+          <th>Elkins</th>
+          <th>Liaos</th>
+          <th>Count Difference</th>
+        </tr>
+      </thead>
+      <tbody>
+    <tr>
+      <td>1 Unsatisfactory</td>
+      <td>2 <span class="muted">(2%)</span><div class="bar-track"><div class="bar elkins" style="width:2.3%"></div></div></td>
+      <td>11 <span class="muted">(14%)</span><div class="bar-track"><div class="bar liaos" style="width:13.8%"></div></div></td>
+      <td class="neg">-9</td>
+    </tr>
+    
+    <tr>
+      <td>2 Needs Development</td>
+      <td>18 <span class="muted">(20%)</span><div class="bar-track"><div class="bar elkins" style="width:20.5%"></div></div></td>
+      <td>8 <span class="muted">(10%)</span><div class="bar-track"><div class="bar liaos" style="width:10.0%"></div></div></td>
+      <td class="pos">+10</td>
+    </tr>
+    
+    <tr>
+      <td>3 Competent</td>
+      <td>23 <span class="muted">(26%)</span><div class="bar-track"><div class="bar elkins" style="width:26.1%"></div></div></td>
+      <td>24 <span class="muted">(30%)</span><div class="bar-track"><div class="bar liaos" style="width:30.0%"></div></div></td>
+      <td class="neg">-1</td>
+    </tr>
+    
+    <tr>
+      <td>4 Excellent</td>
+      <td>32 <span class="muted">(36%)</span><div class="bar-track"><div class="bar elkins" style="width:36.4%"></div></div></td>
+      <td>18 <span class="muted">(22%)</span><div class="bar-track"><div class="bar liaos" style="width:22.5%"></div></div></td>
+      <td class="pos">+14</td>
+    </tr>
+    
+    <tr>
+      <td>5 Outstanding</td>
+      <td>13 <span class="muted">(15%)</span><div class="bar-track"><div class="bar elkins" style="width:14.8%"></div></div></td>
+      <td>19 <span class="muted">(24%)</span><div class="bar-track"><div class="bar liaos" style="width:23.8%"></div></div></td>
+      <td class="neg">-6</td>
+    </tr>
+    </tbody>
+    </table>
+    <div class="note">Counts pool all eight evaluative criteria across completed staff survey responses.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Anonymous Written Comments</h2>
+    
+<div class="comment-grid">
+<div class='comment-col'><h3>Elkins comments</h3><ol><li><span>Comment 1</span><p>Good accreditation experience<br>I liked her ideas about community service, shared governance, the way she described her leadership style<br>Only hesitation is she initially said she hates open office hours, but then described their importance and that she thinks they should be required.</p></li><li><span>Comment 2</span><p>Appears to have a good grasp on allowing faculty governance but still able to make decisions and make progress.<br><br>Likes to make decisions based on careful consideration of data and evidence as opposed to opinions.<br><br>Dr. Elkins will be an advocate for the school of physical therapy program to administration within TUN and Touro university and college systems.<br><br>Lots of expertise and open to exploring change when necessary</p></li><li><span>Comment 3</span><p>I did not come away convinced that she understands the complexity of the role. I was looking for evidence that she could advocate effectively for the program, facilitate difficult conversations among strong-willed faculty, and navigate the tensions that inevitably arise between faculty priorities and institutional demands. I did not hear examples from her prior experience that demonstrated those competencies. In addition, her preparation for the interview appeared limited, and her primary motivation for the move seemed to be geographic proximity to family rather than a clear commitment to this particular program and its mission. This may be a capable person, but I did not see sufficient evidence that she is the right fit for the leadership challenges our program currently faces.</p></li><li><span>Comment 4</span><p>Strengths: She has experience in different institutions at different development stages. Her taking over an Initial Candidacy application from someone demonstrates flexibility and leadership, and the drive to see a project through. Her plan to mentor someone immediately is an appropriate succession plan for her personal timeline.<br><br>Weaknesses: she has little experience in the CAPTE reaffirmation process.</p></li><li><span>Comment 5</span><p>Candidate answered questions with responses that were often off topic, vague, or went on multiple tangents. Did not get a clear picture of how the candidate would navigate departmental challenges, assess the current curriculum, or navigate challenging student scenarios.  Candidate discussed they would change the curriculum to a full hybrid 2 year program without indicating involvement of faculty in the decision making or curricular redesign process however candidate did specifically address the need to have conversations with each faculty member to determine if they would stay on after the program was transition to a hybrid program. Candidate spoke more about expanding the program to 80 students and focusing on gaining students nationwide than focusing on the potential students from the local community to help fill the need for PTs here in Nevada. Candidate did not seem familiar with the mission of TUN.</p></li><li><span>Comment 6</span><p>Dr. Elkins did not demonstrate good leadership capabilities and it&#x27;s clear she didn&#x27;t research our program, our wonderful local community, student demographics or Touro as a whole.  She could not produce clear, specific answers to even basic questions and spoke in generalities that didn&#x27;t match our goals/needs. When asked follow up questions to her vague answers, she responded with more irrelevant ideas that didn&#x27;t make sense for where we are, especially with the re-accreditation in process. She didn&#x27;t ask us any questions or seem interested in how we currently operate which is cause for concern as well. Additionally, I don&#x27;t feel she could provide long term stability which SOPT needs, especially if we want to grow and be recognized as a top DPT program. Dr. Elkins came across as disingenuous and the complete opposite of what we need as a director. She lacks the experience to lead our program into a successful future and I would be greatly disappointed should she be hired.</p></li><li><span>Comment 7</span><p>Rated below average for communication due to the manner in which she answers questions and generally speaks with long answers. Very verbose doesn&#x27;t allow others a chance to speak sometimes.</p></li></ol></div>
+<div class='comment-col'><h3>Liaos comments</h3><ol><li><span>Comment 1</span><p>Said many of the right things. Don&#x27;t believe him.</p></li><li><span>Comment 2</span><p>Dr. Liaos understands our program, TUN, and Touro&#x27;s overall mission. I believe he represents &quot;to serve, to lead, to teach&quot; and he would help bridge the gap between where we have been and where current trends are leading us forward. I feel confident that he could improve upon the great work we already do. <br>He&#x27;s professional but approachable, and I really appreciated his vulnerability and candor. He would be a valuable asset as a program director.</p></li><li><span>Comment 3</span><p>Candidate has a clear understanding of the challenges facing DPT education and has experience with both our program and a hybrid model and can best lead us in a pathway forward in adapting our curriculum but still maintaining the integrity of our curriculum. Candidate has shown growth since he was last employed at TUN. We should move Dr. Liaos forward in the interview process.</p></li><li><span>Comment 4</span><p>Dr. Liaos has been in this position previously and from my experience he caused division amongst the SOPT faculty.  It was not a place I looked forward to coming to work each day and was not a good learning environment for our students.  <br><br>In my experience, his communication, both written and verbal, was often unclear. During verbal discussions, I observed that he frequently interrupted others, spoke over individuals who were already speaking, and continued talking at an increased volume rather than allowing others to finish their comments. These communication patterns made it difficult to have productive dialogue and collaborative discussions. I was earwitness to him yelling at employees on 2 seperate occasions with 2 different employees. I experienced faculty meetings in which he would raise his voice and appear angry. <br><br><br><br>Did not answer questions directly. Discussed problems facing the program and profession with no specific strategies mentioned on how he has dealt with them in the past or and offered very few ideas that may work. <br><br>Mentioned a self paced competency program of sorts but didn&#x27;t detail how the legistics would work<br><br>When asked about considering changes like curricular or changing to hybrid. Dr. Liaos he believes it can be done but made no mention of a needs analysis or if it  would be a right fit for Touro University Nevada.<br><br>When asked about how he would help support clinical education Dr. Liaos mentioned just letting the Clinical education director do their thing but offered no ideas about how to support it. <br><br>When asked about ensuring students prepared for clin ed before going on rotations Dr. Liaos offered very little concrete ideas on how to accomplish that<br><br>Overall Dr. Liaos did not directly answer questions or offer specific solutions to most of the questions. Just offered a lot of generalizations as answers with no specific examples .<br><br>Based on my previous experience with Dr. Liaos&#x27; leadership in this position, I do not believe his leadership style and communication approach align with the needs of the SOPT at TUN.</p></li><li><span>Comment 5</span><p>Steve already knows the Touro system and the problems in the department so he will not require a period of acclimation. He cannot be easily swayed by individual faculty who have their own agenda. He has had time to reflect on his performance from before, allowing him to be more effective. Between the 2 candidates, he is the superior choice.</p></li><li><span>Comment 6</span><p>This recommendation is based on pr virus interactions with the applicant. I did not attend on campus interviews with this candidate so marked NA on all other questions.</p></li></ol></div>
+</div>
+
+  </div>
+
+</div>
+</body>
+</html>
